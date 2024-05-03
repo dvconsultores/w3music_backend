@@ -1,18 +1,41 @@
-near delete nft.w3music2023.testnet w3music2023.testnet
-near create-account nft.w3music2023.testnet --masterAccount w3music2023.testnet --initialBalance 20
+near delete nft2.w3music2023.testnet w3music2023.testnet
+near create-account nft2.w3music2023.testnet --masterAccount w3music2023.testnet --initialBalance 20
 
 
 cargo build --target wasm32-unknown-unknown --release
-near deploy --wasmFile target/wasm32-unknown-unknown/release/w3music_contract.wasm --accountId nft.w3music2023.testnet
+near deploy --wasmFile target/wasm32-unknown-unknown/release/w3music_contract.wasm --accountId nft2.w3music2023.testnet
 
 
-near call nft.w3music2023.testnet new_default_meta '{"owner_id": "nft.w3music2023.testnet", "vault_id": "w3music2023.testnet"}' --accountId nft.w3music2023.testnet
+near call nft2.w3music2023.testnet new_default_meta '{"owner_id": "nft2.w3music2023.testnet", "vault_id": "w3music2023.testnet"}' --accountId nft2.w3music2023.testnet
+
+near call nft2.w3music2023.testnet update_tasa '{"tasa": 2.13}' --accountId nft2.w3music2023.testnet
+
+near call nft2.w3music2023.testnet add_admin '{"account_id": "andromeda2018.testnet"}' --accountId nft2.w3music2023.testnet
 
 
-near call nft.w3music2023.testnet update_tasa '{"tasa": 2.13}' --accountId nft.w3music2023.testnet
-
-near call nft.w3music2023.testnet nft_sample '{"token_metadata":{"title": "prueba musica", "description": "evento de prueba", "media": "https://bafybeiceqkp7hscb72jzqxsdz3o23rf7u6cwr6k3ngkn7asv4fgyp42uei.ipfs.w3s.link/Dion%20Primo%20Enter%20the%20Feast.jpeg", "reference": "https://www.youtube.com/watch?v=jZGpkLElSu8&ab_channel=KarolGVEVO"}, "price":2.13, "royalty":{"nft3.w3music2023.testnet": 1000}, "royalty_buy": {"w3music2023.testnet": 7000}}' --accountId nft.w3music2023.testnet --depositYocto 10910000000000000000000
+near call nft2.w3music2023.testnet nft_sample '{"token_metadata":{"title": "prueba musica", "description": "evento de prueba", "media": "https://bafybeiceqkp7hscb72jzqxsdz3o23rf7u6cwr6k3ngkn7asv4fgyp42uei.ipfs.w3s.link/Dion%20Primo%20Enter%20the%20Feast.jpeg", "reference": "https://www.youtube.com/watch?v=jZGpkLElSu8&ab_channel=KarolGVEVO"}, "price":2.13, "royalty":{"nft3.w3music2023.testnet": 1000}, "royalty_buy": {"w3music2023.testnet": 7000}}' --accountId nft2.w3music2023.testnet --depositYocto 10910000000000000000000
 
 
-near call nft.w3music2023.testnet nft_buy '{"token_event_id": "1|1"}' --accountId nft.w3music2023.testnet --deposit 1.2
+near call nft2.w3music2023.testnet nft_buy '{"token_event_id": "1|1"}' --accountId nft2.w3music2023.testnet --deposit 1.2
+
+near call nft2.w3music2023.testnet set_gender '{"data_gender": {"id": 0, "name": "any"} }' --accountId nft2.w3music2023.testnet
+
+near call nft2.w3music2023.testnet set_gender '{"data_gender": {"id": 1, "name": "Pop"} }' --accountId nft2.w3music2023.testnet
+
+near call nft2.w3music2023.testnet set_gender '{"data_gender": {"id": 2, "name": "Rap"} }' --accountId nft2.w3music2023.testnet
+
+
+
+
+
+NEAR_ENV=mainnet near delete-account nft.w3music.near w3music.near
+
+NEAR_ENV=mainnet near create-account nft.w3music.near --masterAccount w3music.near --initialBalance 10
+
+NEAR_ENV=mainnet near deploy --wasmFile target/wasm32-unknown-unknown/release/w3music_contract.wasm --accountId nft.w3music.near
+
+
+NEAR_ENV=mainnet near call nft.w3music.near new_default_meta '{"owner_id": "nft.w3music.near", "vault_id": "w3music.near"}' --accountId nft.w3music.near
+
+NEAR_ENV=mainnet near call nft.w3music.near update_tasa '{"tasa": 3.60}' --accountId nft.w3music.near
 

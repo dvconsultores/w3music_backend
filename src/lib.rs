@@ -165,6 +165,28 @@ pub struct TokenCustom {
     royalty: Option<HashMap<AccountId, u32>>
 }
 
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct UsersStruct {
+    artist_name: String,
+    public_url: String,
+    age: i8,
+    location: String,
+    youare: String,
+    email: String,
+    music_genre: i16,
+    description: String,
+    wallet: AccountId,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct GendersStruct {
+	id: i16,
+    name: String,
+}
+
+
 /* fin codigo costumizado */
 
 #[near_bindgen]
@@ -182,6 +204,8 @@ pub struct Contract {
     vault_id: AccountId,
     vault_fee: u32,
     tasa: f64,
+    users: UnorderedMap<AccountId, UsersStruct>,
+    genders: UnorderedMap<i16, GendersStruct>,
 }
 
 const DATA_IMAGE_SVG_NEAR_ICON: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 288 288'%3E%3Cg id='l' data-name='l'%3E%3Cpath d='M187.58,79.81l-30.1,44.69a3.2,3.2,0,0,0,4.75,4.2L191.86,103a1.2,1.2,0,0,1,2,.91v80.46a1.2,1.2,0,0,1-2.12.77L102.18,77.93A15.35,15.35,0,0,0,90.47,72.5H87.34A15.34,15.34,0,0,0,72,87.84V201.16A15.34,15.34,0,0,0,87.34,216.5h0a15.35,15.35,0,0,0,13.08-7.31l30.1-44.69a3.2,3.2,0,0,0-4.75-4.2L96.14,186a1.2,1.2,0,0,1-2-.91V104.61a1.2,1.2,0,0,1,2.12-.77l89.55,107.23a15.35,15.35,0,0,0,11.71,5.43h3.13A15.34,15.34,0,0,0,216,201.16V87.84A15.34,15.34,0,0,0,200.66,72.5h0A15.35,15.35,0,0,0,187.58,79.81Z'/%3E%3C/g%3E%3C/svg%3E";
@@ -199,6 +223,8 @@ enum StorageKey {
     TokensBySeriesInner { token_series: String },
     TokensByObjectsInner { token_series: String },
     TokensPerOwner { account_hash: Vec<u8> },
+    UsersKey,
+    GendersKey,
 }
 
 #[near_bindgen]
@@ -245,6 +271,8 @@ impl Contract {
             vault_id: vault_id,
             vault_fee: 300,
             tasa: 0.0,
+            users: UnorderedMap::new(StorageKey::UsersKey),
+            genders: UnorderedMap::new(StorageKey::GendersKey),
         }
     }
 
@@ -268,7 +296,60 @@ impl Contract {
         self.tokens.mint(token_id, receiver_id, Some(token_metadata))
     }*/
 
+    pub fn clear_contract(&mut self) {
+        assert!(self.owner_id == env::signer_account_id(), "Only administrator");
 
+        self.id_sample = 0;
+        self.id_objects = 0;
+        self.id_event = 0;
+        self.token_series_by_id.clear();
+    }
+
+
+    pub fn set_user(&mut self, data_user: UsersStruct) {
+        assert!(data_user.wallet == env::signer_account_id(), "the user who called the function does not match the supplied wallet");
+        
+        self.genders.get(&data_user.music_genre).expect("the music genre does not exist");
+
+        self.users.insert(&data_user.wallet, &data_user);
+
+        env::log_str(
+            &json!({
+                "type": "set_user",
+                "params": {
+                    "artist_name": data_user.artist_name,
+                    "public_url": data_user.public_url,
+                    "age": data_user.age,
+                    "location": data_user.location,
+                    "youare": data_user.youare,
+                    "email": data_user.email,
+                    "music_genre": data_user.music_genre,
+                    "description": data_user.description,
+                    "wallet": data_user.wallet,
+                }
+            })
+            .to_string(),
+        );
+    }
+
+    pub fn set_gender(&mut self, data_gender: GendersStruct) {
+        assert!(self.owner_id == env::signer_account_id() || self.list_admin.contains(&env::signer_account_id()), "Only administrator");
+
+        self.genders.insert(&data_gender.id, &data_gender);
+
+        env::log_str(
+            &json!({
+                "type": "set_gender",
+                "params": {
+                    "id": data_gender.id,
+                    "name": data_gender.name,
+                }
+            })
+            .to_string(),
+        );
+    }
+
+    
     // cargar usuarios a la lista de administradores
     // solo los administradores pueden usar esta funcion
     pub fn add_admin(&mut self, account_id: AccountId) {
@@ -526,7 +607,7 @@ impl Contract {
         };
 
         let mut metadata: TokenMetadata = token_metadata.clone();
-        metadata.copies = Some(1);
+        metadata.copies = None;
 
         //creando el evento
         self.token_series_by_id.insert(&token_event_id, &TokenSeries{
